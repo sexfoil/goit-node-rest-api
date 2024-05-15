@@ -9,8 +9,8 @@ const getAllContacts = async (req, res) => {
 };
 
 const getOneContact = async (req, res) => {
-  const { id } = req.params;
-  const contact = await contactsService.getContactById(id);
+  const { contactId } = req.params;
+  const contact = await contactsService.getContactById(contactId);
 
   if (!contact) {
     throw HttpError(404);
@@ -19,8 +19,8 @@ const getOneContact = async (req, res) => {
 };
 
 const deleteContact = async (req, res) => {
-  const { id } = req.params;
-  const contact = await contactsService.removeContact(id);
+  const { contactId } = req.params;
+  const contact = await contactsService.removeContact(contactId);
 
   if (!contact) {
     throw HttpError(404);
@@ -35,8 +35,18 @@ const createContact = async (req, res) => {
 };
 
 const updateContact = async (req, res) => {
-  const { id } = req.params;
-  const contact = await contactsService.updateContactById(id, req.body);
+  const { contactId } = req.params;
+  const contact = await contactsService.updateContactById(contactId, req.body);
+
+  if (!contact) {
+    throw HttpError(404);
+  }
+  res.json(contact);
+};
+
+const updateStatusContact = async (req, res) => {
+  const { contactId } = req.params;
+  const contact = await contactsService.updateContactById(contactId, req.body);
 
   if (!contact) {
     throw HttpError(404);
@@ -50,4 +60,5 @@ export default {
   deleteContact: controllerWrapper(deleteContact),
   createContact: controllerWrapper(createContact),
   updateContact: controllerWrapper(updateContact),
+  updateStatusContact: controllerWrapper(updateStatusContact),
 };
