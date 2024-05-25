@@ -42,7 +42,14 @@ const login = async (req, res) => {
   });
 };
 
-const current = async (req, res) => {
+const logout = async (req, res) => {
+  const { _id } = req.user;
+  await usersService.updateUser({ _id }, { token: null });
+
+  res.status(204).json();
+};
+
+const getCurrent = async (req, res) => {
   const { email, subscription } = req.user;
 
   res.json({
@@ -51,16 +58,21 @@ const current = async (req, res) => {
   });
 };
 
-const logout = async (req, res) => {
-  const { _id } = req.user;
-  await usersService.updateUser({ _id }, { token: null });
+const updateSubscription = async (req, res) => {
+  const { _id, email } = req.user;
+  const { subscription } = req.body;
+  await usersService.updateUser({ _id }, { subscription });
 
-  res.status(204).json();
+  res.json({
+    email,
+    subscription,
+  });
 };
 
 export default {
   register: controllerWrapper(register),
   login: controllerWrapper(login),
-  current: controllerWrapper(current),
   logout: controllerWrapper(logout),
+  getCurrent: controllerWrapper(getCurrent),
+  updateSubscription: controllerWrapper(updateSubscription),
 };

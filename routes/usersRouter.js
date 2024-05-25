@@ -2,7 +2,11 @@ import express from "express";
 import isEmptyBody from "../middlewares/isEmptyBody.js";
 import validateBody from "../helpers/validateBody.js";
 import authenticate from "../middlewares/authenticate.js";
-import { userSigninSchema, userSignupSchema } from "../schemas/usersSchemas.js";
+import {
+  userSigninSchema,
+  userSignupSchema,
+  userSubscriptionSchema,
+} from "../schemas/usersSchemas.js";
 import usersControllers from "../controllers/usersControllers.js";
 
 const usersRouter = express.Router();
@@ -21,8 +25,16 @@ usersRouter.post(
   usersControllers.login
 );
 
-usersRouter.get("/current", authenticate, usersControllers.current);
+usersRouter.get("/current", authenticate, usersControllers.getCurrent);
 
 usersRouter.post("/logout", authenticate, usersControllers.logout);
+
+usersRouter.patch(
+  "/",
+  authenticate,
+  isEmptyBody,
+  validateBody(userSubscriptionSchema),
+  usersControllers.updateSubscription
+);
 
 export default usersRouter;
