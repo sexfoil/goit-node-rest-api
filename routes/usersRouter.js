@@ -14,4 +14,15 @@ usersRouter.post(
   usersControllers.register
 );
 
+usersRouter.post(
+  "/login",
+  isEmptyBody,
+  validateBody(userSigninSchema),
+  usersControllers.login
+);
+
+usersRouter.get("/current", authenticate, usersControllers.current);
+
+usersRouter.post("/logout", authenticate, usersControllers.logout);
+
 export default usersRouter;
