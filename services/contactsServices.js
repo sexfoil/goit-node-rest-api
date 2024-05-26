@@ -1,7 +1,12 @@
 import Contact from "../models/Contact.js";
 
-export async function listContacts() {
-  return Contact.find();
+export async function listContacts(searchParams) {
+  const { filter = {}, fields = {}, settings = {} } = searchParams;
+  return Contact.find(filter, fields, settings);
+}
+
+export async function countContacts(filter) {
+  return Contact.countDocuments(filter);
 }
 
 export async function getContactById(id) {

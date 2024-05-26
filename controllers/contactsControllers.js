@@ -3,9 +3,25 @@ import HttpError from "../helpers/HttpError.js";
 import controllerWrapper from "../decorators/controllerWrapper.js";
 
 const getAllContacts = async (req, res) => {
-  const contacts = await contactsService.listContacts();
+  const { page = 1, limit = 10, ...query } = req.query;
+  const filter = { ...query };
+  const fields = "-createdAt -updatedAt";
+  const settings = {
+    skip: (page - 1) * limit,
+    limit,
+  };
 
-  res.json(contacts);
+  const contacts = await contactsService.listContacts({
+    filter,
+    fields,
+    settings,
+  });
+  const total = await contactsService.countContacts(filter);
+
+  res.json({
+    total,
+    contacts,
+  });
 };
 
 const getOneContact = async (req, res) => {
