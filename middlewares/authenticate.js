@@ -16,6 +16,11 @@ const authenticate = async (req, res, next) => {
   try {
     const { id } = verifyToken(token);
     const user = await findUser({ _id: id });
+
+    if (user.token === null || user.token !== token) {
+      throw new Error();
+    }
+
     req.user = user;
     next();
   } catch (error) {

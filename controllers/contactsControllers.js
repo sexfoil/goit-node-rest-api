@@ -4,7 +4,7 @@ import controllerWrapper from "../decorators/controllerWrapper.js";
 
 const getAllContacts = async (req, res) => {
   const { page = 1, limit = 10, ...query } = req.query;
-  const filter = { ...query };
+  const filter = { ...query, owner: req.user._id };
   const fields = "-createdAt -updatedAt";
   const settings = {
     skip: (page - 1) * limit,
@@ -28,7 +28,7 @@ const getOneContact = async (req, res) => {
   const { contactId } = req.params;
   const contact = await contactsService.getContactById(contactId);
 
-  if (!contact) {
+  if (isInvalidContact(contact, req)) {
     throw HttpError(404);
   }
   res.json(contact);
@@ -38,7 +38,7 @@ const deleteContact = async (req, res) => {
   const { contactId } = req.params;
   const contact = await contactsService.removeContact(contactId);
 
-  if (!contact) {
+  if (isInvalidContact(contact, req)) {
     throw HttpError(404);
   }
   res.json(contact);
@@ -54,7 +54,7 @@ const updateContact = async (req, res) => {
   const { contactId } = req.params;
   const contact = await contactsService.updateContactById(contactId, req.body);
 
-  if (!contact) {
+  if (isInvalidContact(contact, req)) {
     throw HttpError(404);
   }
   res.json(contact);
@@ -64,11 +64,15 @@ const updateStatusContact = async (req, res) => {
   const { contactId } = req.params;
   const contact = await contactsService.updateContactById(contactId, req.body);
 
-  if (!contact) {
+  if (isInvalidContact(contact, req)) {
     throw HttpError(404);
   }
   res.json(contact);
 };
+
+function isInvalidContact(contact, req) {
+  return !contact || req.user.email !== contact.owner?.email;
+}
 
 export default {
   getAllContacts: controllerWrapper(getAllContacts),
