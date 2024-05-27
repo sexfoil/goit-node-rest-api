@@ -2,7 +2,7 @@ import Contact from "../models/Contact.js";
 
 export async function listContacts(searchParams) {
   const { filter = {}, fields = {}, settings = {} } = searchParams;
-  return Contact.find(filter, fields, settings);
+  return Contact.find(filter, fields, settings).populate("owner", "email");
 }
 
 export async function countContacts(filter) {
@@ -10,17 +10,17 @@ export async function countContacts(filter) {
 }
 
 export async function getContactById(id) {
-  return Contact.findById(id);
+  return Contact.findById(id).populate("owner", "email");
 }
 
 export async function removeContact(id) {
-  return Contact.findByIdAndDelete(id);
+  return Contact.findByIdAndDelete(id).populate("owner", "email");
 }
 
 export async function addContact(data) {
-  return Contact.create(data);
+  return Contact.create(data).populate("owner", "email");
 }
 
 export async function updateContactById(id, data) {
-  return Contact.findByIdAndUpdate(id, data);
+  return Contact.findByIdAndUpdate(id, data).populate("owner", "email");
 }
