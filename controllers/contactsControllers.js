@@ -27,8 +27,9 @@ const getAllContacts = async (req, res) => {
 const getOneContact = async (req, res) => {
   const { contactId } = req.params;
   const contact = await contactsService.getContactById(contactId);
+  validateContactOwner(contact, req.user);
 
-  if (isInvalidContact(contact, req)) {
+  if (!contact) {
     throw HttpError(404);
   }
   res.json(contact);
@@ -36,25 +37,32 @@ const getOneContact = async (req, res) => {
 
 const deleteContact = async (req, res) => {
   const { contactId } = req.params;
+  const contactToCheck = await contactsService.getContactById(contactId);
+  validateContactOwner(contactToCheck, req.user);
+
   const contact = await contactsService.removeContact(contactId);
 
-  if (isInvalidContact(contact, req)) {
+  if (!contact) {
     throw HttpError(404);
   }
   res.json(contact);
 };
 
 const createContact = async (req, res) => {
-  const contact = await contactsService.addContact(req.body);
+  const { _id: owner } = req.user;
+  const contact = await contactsService.addContact({ ...req.body, owner });
 
   res.status(201).json(contact);
 };
 
 const updateContact = async (req, res) => {
   const { contactId } = req.params;
+  const contactToCheck = await contactsService.getContactById(contactId);
+  validateContactOwner(contactToCheck, req.user);
+
   const contact = await contactsService.updateContactById(contactId, req.body);
 
-  if (isInvalidContact(contact, req)) {
+  if (!contact) {
     throw HttpError(404);
   }
   res.json(contact);
@@ -62,16 +70,22 @@ const updateContact = async (req, res) => {
 
 const updateStatusContact = async (req, res) => {
   const { contactId } = req.params;
+  const contactToCheck = await contactsService.getContactById(contactId);
+  validateContactOwner(contactToCheck, req.user);
+
   const contact = await contactsService.updateContactById(contactId, req.body);
 
-  if (isInvalidContact(contact, req)) {
+  if (!contact) {
     throw HttpError(404);
   }
   res.json(contact);
 };
 
-function isInvalidContact(contact, req) {
-  return !contact || req.user.email !== contact.owner?.email;
+function validateContactOwner(contact, user) {
+  const { _id: ownerId } = user;
+  if (!ownerId.equals(contact?.owner?._id)) {
+    throw HttpError(404);
+  }
 }
 
 export default {

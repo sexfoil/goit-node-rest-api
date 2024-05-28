@@ -18,7 +18,7 @@ export async function removeContact(id) {
 }
 
 export async function addContact(data) {
-  return Contact.create(data).populate("owner", "email");
+  return Contact.create(data);
 }
 
 export async function updateContactById(id, data) {
