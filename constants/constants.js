@@ -9,3 +9,7 @@ export const PATHS = {
   TEMP: "tmp",
   AVATAR: "avatars",
 };
+
+export const PARAMS = {
+  AVATAR_FILE: "avatar",
+};

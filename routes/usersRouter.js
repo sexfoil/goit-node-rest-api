@@ -9,6 +9,8 @@ import {
 } from "../schemas/usersSchemas.js";
 import usersControllers from "../controllers/usersControllers.js";
 import upload from "../middlewares/upload.js";
+import isFileExist from "../middlewares/isFileExist.js";
+import { PARAMS } from "../constants/constants.js";
 
 const usersRouter = express.Router();
 
@@ -41,7 +43,8 @@ usersRouter.patch(
 usersRouter.patch(
   "/avatars",
   authenticate,
-  upload.single("avatar"),
+  upload.single(PARAMS.AVATAR_FILE),
+  isFileExist,
   usersControllers.updateAvatar
 );
 
