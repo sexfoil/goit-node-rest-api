@@ -6,6 +6,7 @@ import {
   userSigninSchema,
   userSignupSchema,
   userSubscriptionSchema,
+  userEmailSchema,
 } from "../schemas/usersSchemas.js";
 import usersControllers from "../controllers/usersControllers.js";
 import upload from "../middlewares/upload.js";
@@ -29,6 +30,15 @@ usersRouter.post(
 );
 
 usersRouter.get("/current", authenticate, usersControllers.getCurrent);
+
+usersRouter.get("/verify/:verificationToken", usersControllers.verify);
+
+usersRouter.post(
+  "/verify",
+  isEmptyBody,
+  validateBody(userEmailSchema),
+  usersControllers.verifyResend
+);
 
 usersRouter.post("/logout", authenticate, usersControllers.logout);
 

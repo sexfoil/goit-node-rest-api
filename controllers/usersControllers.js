@@ -3,11 +3,13 @@ import HttpError from "../helpers/HttpError.js";
 import compareHash from "../helpers/compareHash.js";
 import controllerWrapper from "../decorators/controllerWrapper.js";
 import { createToken } from "../helpers/jwt.js";
+import { PATHS } from "../constants/constants.js";
+import { sendEmail, getVerifyEmailContent } from "../helpers/mailer.js";
 import gravatar from "gravatar";
 import path from "path";
 import fs from "fs/promises";
 import Jimp from "jimp";
-import { PATHS } from "../constants/constants.js";
+import { nanoid } from "nanoid";
 
 const AVATAR_PATH = path.resolve("public", "avatars");
 
@@ -20,7 +22,14 @@ const register = async (req, res) => {
   }
 
   const avatarURL = gravatar.url(data.email);
-  const newUser = await usersService.saveUser({ ...data, avatarURL });
+  const verificationToken = `${Date.now()}_${nanoid()}`;
+  const newUser = await usersService.saveUser({
+    ...data,
+    avatarURL,
+    verificationToken,
+  });
+
+  sendVerifyEmail(req, verificationToken);
 
   res.status(201).json({
     user: {
@@ -40,6 +49,10 @@ const login = async (req, res) => {
   const isValidPassword = await compareHash(password, user.password);
   if (!isValidPassword) {
     throw HttpError(401, "Invalid email or password");
+  }
+
+  if (!user.verify) {
+    throw HttpError(401, "Email is not verified");
   }
 
   const { _id: id, subscription } = user;
@@ -68,6 +81,43 @@ const getCurrent = async (req, res) => {
   res.json({
     email,
     subscription,
+  });
+};
+
+const verify = async (req, res) => {
+  const { verificationToken } = req.params;
+
+  const user = await usersService.findUser({ verificationToken });
+
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+
+  await usersService.updateUser(
+    { _id: user._id },
+    { verify: true, verificationToken: "N/A" }
+  );
+
+  res.json({
+    message: "Verification successful",
+  });
+};
+
+const verifyResend = async (req, res) => {
+  const { email } = req.body;
+  const user = await usersService.findUser({ email });
+
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+  if (user.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+
+  sendVerifyEmail(req, user.verificationToken);
+
+  res.json({
+    message: "Verification email sent",
   });
 };
 
@@ -105,11 +155,20 @@ const saveConvertedImage = async (src, dest) => {
     .catch((err) => console.log(err.message));
 };
 
+const sendVerifyEmail = async (req, verificationToken) => {
+  const emailContent = getVerifyEmailContent(req, verificationToken);
+  const mailerMessage = sendEmail(emailContent)
+    .then(() => console.log(`Success!`))
+    .catch((err) => console.log(`Fail! Cause: ${err.message}`));
+};
+
 export default {
   register: controllerWrapper(register),
   login: controllerWrapper(login),
   logout: controllerWrapper(logout),
   getCurrent: controllerWrapper(getCurrent),
+  verify: controllerWrapper(verify),
+  verifyResend: controllerWrapper(verifyResend),
   updateSubscription: controllerWrapper(updateSubscription),
   updateAvatar: controllerWrapper(updateAvatar),
 };
